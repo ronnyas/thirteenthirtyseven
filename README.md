@@ -16,7 +16,6 @@ docker run thirteenthirtyseven
 
 # Docker compose
 
-## Save to docker-compose.yml
 ```
 version: "3.9"
 
