@@ -7,9 +7,10 @@ go run main.go
 
 
 # Docker
-`docker build -t thirteenthirtyseven .`
-
-`docker run thirteenthirtyseven`
+```
+docker build -t thirteenthirtyseven .
+docker run thirteenthirtyseven
+```
 
 
 
