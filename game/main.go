@@ -189,7 +189,7 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 			},
 			{
 				name:    "this week",
-				sqlStmt: "select user_id, sum(points) from points where timestamp >= date('now', '-7 day') group by user_id order by sum(points) desc limit 10;",
+				sqlStmt: "select user_id, sum(points) from points where date(timestamp) >= date('now', 'weekday 0', '-7 days') group by user_id order by sum(points) desc limit 10;",
 				prefix:  "\n\n**Leaderboard this week:**\n",
 			},
 		}
