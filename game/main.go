@@ -76,7 +76,7 @@ func generateLeaderboardMessage(prefix string, rows *sql.Rows) (string, error) {
 	return leaderboardMessage, nil
 }
 
-func SavePoints(userID string, points int) {
+func SavePoints(userID string, points int) bool {
 	db := Config.db
 	sqlStmt := `
 		select count(*) from points
@@ -85,11 +85,12 @@ func SavePoints(userID string, points int) {
 	var count int
 	err := db.QueryRow(sqlStmt, userID).Scan(&count)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return false
 	}
 	
 	if count > 0 {
-		return
+		return false
 	} 
 		
 	sqlStmt = `
@@ -98,8 +99,11 @@ func SavePoints(userID string, points int) {
 	`
 	_, err = db.Exec(sqlStmt, time.Now(), userID, points)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return false
 	}
+
+	return true
 }
 
 func DailyScoreReport(s *discordgo.Session) {
@@ -163,9 +167,11 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		
 		points := calculatePointsFromTimestamp(m.Timestamp)
 		
-		SavePoints(m.Author.Username, points)
-		
-		s.MessageReactionAdd(m.ChannelID, m.ID, "1337:1079824982613442580")
+		save := SavePoints(m.Author.Username, points)
+		if save {
+			s.MessageReactionAdd(m.ChannelID, m.ID, "1337:1079824982613442580")
+		}
+
 	}
 
 	if m.Content == ".time" {
