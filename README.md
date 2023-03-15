@@ -29,5 +29,6 @@ services:
       DATABASEPATH: "/app/data/thirteenthirtyseven.db"
     volumes:
       - ./database:/app/data
+      - "/etc/localtime:/etc/localtime:ro"
     restart: unless-stopped
 ```
