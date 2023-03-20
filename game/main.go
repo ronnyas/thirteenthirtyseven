@@ -158,6 +158,10 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
+	if m.ChannelID != Config.mainChannel {
+		return
+	}
+
 	if m.Content == "1337" {
 		current_time := time.Now()
 
@@ -210,6 +214,11 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if err != nil {
 				panic(err)
 			}
+
+			if len(leaderboardMessage) == len(config.prefix) {
+				leaderboardMessage += "No points yet!"
+			}
+
 	
 			s.ChannelMessageSend(m.ChannelID, leaderboardMessage)
 		}
