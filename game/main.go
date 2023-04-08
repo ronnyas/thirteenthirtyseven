@@ -18,6 +18,7 @@ type leaderboardConfig struct {
 var Config struct {
 	mainChannel string
 	db 			*sql.DB
+	StreakDays  int
 }
 
 func SetDatabase(db *sql.DB) {
@@ -26,7 +27,9 @@ func SetDatabase(db *sql.DB) {
 func SetMainChannel(channelID string) {
 	Config.mainChannel = channelID
 }
-
+func SetStreakDays(days int) {
+	Config.StreakDays = days
+}
 
 func calculatePointsFromTimestamp(timestamp time.Time) int {
 	layout := "2006-01-02 15:04:05.000 -0700 MST"
@@ -145,6 +148,16 @@ func DailyScoreReport(s *discordgo.Session) {
 			}
 
 			s.ChannelMessageSend(mainChannel, leaderboardMessage)
+			
+			// update streaks
+			_, brokenStreaks, err := UpdateAllStreaks(db)
+			if err != nil {
+				log.Fatal(err)
+				continue
+			}
+			for _, brokenStreak := range brokenStreaks {
+				s.ChannelMessageSend(mainChannel, fmt.Sprintf("%s broke their streak of %d days", brokenStreak.UserID, brokenStreak.Duration()))
+			}
 
 			time.Sleep(60 * time.Second)
 		} else {
@@ -161,6 +174,7 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.ChannelID != Config.mainChannel {
 		return
 	}
+
 
 	if m.Content == "1337" {
 		current_time := time.Now()
@@ -222,5 +236,26 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 	
 			s.ChannelMessageSend(m.ChannelID, leaderboardMessage)
 		}
+	}
+
+	if m.Content == "1337 streak" {
+		streaks, err := GetActiveStreaks(Config.db)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		// check if there are any active streaks
+		if len(streaks) == 0 {
+			s.ChannelMessageSend(m.ChannelID, "No active streaks :(")
+			return
+		}
+		streakMsg := "Active streaks:\n"
+		for _, streak := range streaks {
+			streakDuration := streak.Duration()
+			streakMsg += fmt.Sprintf("%s: %d days\n", streak.UserID, streakDuration)
+		}
+
+		s.ChannelMessageSend(m.ChannelID, streakMsg)
+	
 	}
 }

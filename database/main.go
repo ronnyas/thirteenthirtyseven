@@ -16,14 +16,22 @@ func Connect(databasePath string) (*sql.DB, error) {
 	return db, nil
 }
 
-func SetupDatabaseScheme(db *sql.DB) error {
+func SetupDatabaseSchema(db *sql.DB) error {
 	_, err := db.Exec(`
 		create table if not exists 
 		points (
 			id integer not null primary key,
-			timestamp text,
-			user_id text, 
-			points integer
+			timestamp text not null,
+			user_id text not null, 
+			points integer not null
+		);
+
+		create table if not exists
+		streaks (
+			id integer not null primary key,
+			user_id text not null,
+			start_time text not null,
+			end_time text not null
 		);
 	`)
 	if err != nil {

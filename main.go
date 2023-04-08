@@ -18,6 +18,7 @@ import (
 
 
 func main() {
+	log.Println("Loading config")
 	cfg := config.LoadConfig()
 
 	log.Println("Starting bot")
@@ -35,7 +36,7 @@ func main() {
 	}
 	defer db.Close()
 	
-	err = database.SetupDatabaseScheme(db)
+	err = database.SetupDatabaseSchema(db)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -50,6 +51,18 @@ func main() {
 	discord.AddHandler(game.Commands)
 	game.SetDatabase(db)
 	game.SetMainChannel(cfg.MainChannel)
+	game.SetStreakDays(cfg.StreakDays)
+
+	// temp code
+	// check if there are any data in the streaks table. if not , run BackfillStreaks
+	sqlStmt := `select id from streaks limit 1;`
+	row := db.QueryRow(sqlStmt)
+	var id int
+	err = row.Scan(&id)
+	if err != nil {
+		log.Println("No streaks found, backfilling")
+		game.BackfillStreaks(db)
+	}
 
 	discord.Identify.Intents = discordgo.IntentsGuildMessages
 	

@@ -13,6 +13,9 @@ type Config struct {
 	ReconnectDelay int `default:"5"`
 	MainChannel string `required:"true"`
 
+	// Game settings
+	StreakDays int `default:"3"` // How many days in a row to count as a streak
+
 	// SQLite
 	DatabasePath string `default:"thirteenthirtyseven.db"`
 }
