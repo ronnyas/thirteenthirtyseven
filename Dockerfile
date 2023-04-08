@@ -1,5 +1,5 @@
 # Builder stage
-FROM golang:1.17.5-alpine AS builder
+FROM golang:1.18-alpine AS builder
 RUN apk add build-base
 WORKDIR /app
 COPY . .
