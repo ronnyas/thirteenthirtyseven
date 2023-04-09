@@ -17,7 +17,6 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-
 	if m.Content == "1337" {
 		current_time := time.Now()
 
@@ -32,10 +31,6 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.MessageReactionAdd(m.ChannelID, m.ID, "1337:1079824982613442580")
 		}
 
-	}
-
-	if m.Content == ".time" {
-		s.ChannelMessageSend(m.ChannelID, time.Now().Format("2006-01-02 15:04:05"))
 	}
 
 	if m.Content == "1337 lb" {

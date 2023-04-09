@@ -18,6 +18,9 @@ type Config struct {
 
 	// SQLite
 	DatabasePath string `default:"thirteenthirtyseven.db"`
+
+	// OpenAI
+	OpenAIKey string `required:"true"`
 }
 
 func LoadConfig() *Config {

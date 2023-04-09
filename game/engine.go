@@ -8,16 +8,14 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func DailyScoreReport(s *discordgo.Session) {
+func StartEngine(s *discordgo.Session) {
 	db := Config.db
 	mainChannel := Config.mainChannel
-	log.Println("DailyScoreReport started")
+	log.Println("Game engine started")
 	var last_report string = ""
 	for {
 		current_time := time.Now()
 		if current_time.Hour() == 13 && current_time.Minute() == 38 {
-			log.Println("DailyScoreReport running")
-			// check if it's already been posted
 			if last_report == current_time.Format("2006-01-02") {
 				continue
 			}
