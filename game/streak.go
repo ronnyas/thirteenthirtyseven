@@ -33,7 +33,7 @@ func (s *Streak) Duration() int {
 		panic(err)
 	}
 
-	return int(end.Sub(start).Hours() / 24) + 1
+	return int(end.Sub(start).Round(24*time.Hour).Hours() / 24) + 1
 }
 
 // backfill streaks from points, since we didn't have streaks before.
