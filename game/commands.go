@@ -17,15 +17,16 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	if m.Content == "1337" {
+	if m.Content == "1337" || m.Content == "leet" {
 		current_time := time.Now()
 
 		if current_time.Hour() != 13 || current_time.Minute() != 37 {
+			s.ChannelMessageSend(m.ChannelID, "Now is not the time n00b!")
 			return
 		}
-		
+
 		points := calculatePointsFromTimestamp(m.Timestamp)
-		
+
 		save := SavePoints(m.Author.Username, points)
 		if save {
 			s.MessageReactionAdd(m.ChannelID, m.ID, "1337:1079824982613442580")
@@ -48,19 +49,19 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 				prefix:  "\n\n**Leaderboard this week:**\n",
 			},
 		}
-	
+
 		for _, config := range leaderboardConfigs {
 			rows, err := db.Query(config.sqlStmt)
 			if err != nil {
 				panic(err)
 			}
 			defer rows.Close()
-	
+
 			leaderboardMessage, err := generateLeaderboardMessage(config.prefix, rows)
 			if err != nil {
 				panic(err)
 			}
-	
+
 			err = rows.Err()
 			if err != nil {
 				panic(err)
@@ -70,7 +71,6 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 				leaderboardMessage += "No points yet!"
 			}
 
-	
 			s.ChannelMessageSend(m.ChannelID, leaderboardMessage)
 		}
 	}
@@ -93,6 +93,6 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		s.ChannelMessageSend(m.ChannelID, streakMsg)
-	
+
 	}
 }
