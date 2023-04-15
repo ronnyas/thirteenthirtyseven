@@ -27,7 +27,7 @@ func SetOpenAIKey(key string) {
 
 
 func GenerateAnswerToDiscussion(messages []Message) string {
-	prompt := `Du er en av personene i samtalen. Svar med 1-3 setninger. Referer til personene i samtalen med navn hvis du vil argumentere for eller imot noe de sier. Kom med nye perspektiver og ikke gjenta det som allerede er sagt.  Vær uenig hvis noe ulogisk er sagt. Engajert og humoristisk uenig eventuelt. Hvis noe er humoristisk eller ironisk, vis samme humor eller ironi. Bruk opp til to emojis. Du kan flette inn et klokt spørsmål om relevant. Unngå generelle spørsmål. Spørsmål som skaper refleksjon=OK. Spørsmål for nysgjerrighetens skyld = Ikke ok. Chatlog:`
+	prompt := `Du er en av personene i samtalen og du skal være sarkastisk med dine svar. Svar med 1-3 setninger.  Chatlog:`
 	for _, message := range messages {
 		prompt += message.Username + ": " + message.Message + "\n"
 	}
