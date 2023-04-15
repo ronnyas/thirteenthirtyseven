@@ -131,10 +131,10 @@ func GetActiveStreaks(db *sql.DB) ([]Streak, error) {
 	// get all streaks that have end time == today
 	timeNow := time.Now()
 	var timeString string
-	if timeNow.Hour() <= 13 && timeNow.Minute() < 38 {
-		timeString = time.Now().AddDate(0, 0, -1).Format("2006-01-02")
+	if timeNow.Hour() < 13 || (timeNow.Hour() == 13 && timeNow.Minute() < 38) {
+	    timeString = time.Now().AddDate(0, 0, -1).Format("2006-01-02")
 	} else {
-		timeString = time.Now().Format("2006-01-02")
+	    timeString = time.Now().Format("2006-01-02")
 	}
 	
 	rows, err := db.Query(`
