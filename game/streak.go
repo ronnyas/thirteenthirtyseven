@@ -10,14 +10,14 @@ import (
 )
 
 type Streak struct {
-	UserID string
+	UserID    string
 	StartTime string
-	EndTime string
+	EndTime   string
 }
 type Point struct {
-	UserID string
+	UserID    string
 	Timestamp string
-	Points int
+	Points    int
 }
 
 func (s *Streak) Duration() int {
@@ -33,11 +33,11 @@ func (s *Streak) Duration() int {
 		panic(err)
 	}
 
-	return int(end.Sub(start).Round(24*time.Hour).Hours() / 24) + 1
+	return int(end.Sub(start).Round(24*time.Hour).Hours()/24) + 1
 }
 
 // backfill streaks from points, since we didn't have streaks before.
-// this is a one-time thing. keeping it for reference. 
+// this is a one-time thing. keeping it for reference.
 func BackfillStreaks(db *sql.DB) error {
 	rows, err := db.Query(`
 		select user_id, timestamp from points
@@ -103,7 +103,6 @@ func BackfillStreaks(db *sql.DB) error {
 		}
 	}
 
-
 	if streak.UserID != "" {
 		streaks = append(streaks, streak)
 	}
@@ -136,11 +135,11 @@ func GetActiveStreaks(db *sql.DB) ([]Streak, error) {
 	} else {
 	    timeString = time.Now().Format("2006-01-02")
 	}
-	
+
 	rows, err := db.Query(`
 		select user_id, start_time, end_time from streaks
 		where end_time like ?
-	`, timeString + "%")
+	`, timeString+"%")
 
 	if err != nil {
 		return nil, err
@@ -166,7 +165,7 @@ func GetTodaysPoints(db *sql.DB) ([]Point, error) {
 	rows, err := db.Query(`
 		select user_id, timestamp, points from points
 		where timestamp like ?
-	`, time.Now().Format("2006-01-02") + "%")
+	`, time.Now().Format("2006-01-02")+"%")
 
 	if err != nil {
 		return nil, err
@@ -214,13 +213,12 @@ func CreateStreak(db *sql.DB, streak Streak) error {
 	return nil
 }
 
-
-func UpdateAllStreaks(db *sql.DB) (new[]Streak, broken[]Streak, error error) {
+func UpdateAllStreaks(db *sql.DB) (new []Streak, broken []Streak, error error) {
 	// get all streaks that have end time == yesterday
 	rows, err := db.Query(`
 		select user_id, start_time, end_time from streaks
 		where end_time like ?
-	`, time.Now().AddDate(0, 0, -1).Format("2006-01-02") + "%")
+	`, time.Now().AddDate(0, 0, -1).Format("2006-01-02")+"%")
 
 	if err != nil {
 		return nil, nil, err
@@ -239,7 +237,6 @@ func UpdateAllStreaks(db *sql.DB) (new[]Streak, broken[]Streak, error error) {
 
 		streaks = append(streaks, streak)
 	}
-	
 
 	// get all points that have been given today
 	points, err := GetTodaysPoints(db)
@@ -260,41 +257,40 @@ func UpdateAllStreaks(db *sql.DB) (new[]Streak, broken[]Streak, error error) {
 
 				foundUsers = append(foundUsers, point.UserID)
 
-				break 
+				break
 			}
 		}
-	
 
 		// if user doesn't have a streak, create one if they have received points the lasst three days
 		if !slices.Contains(foundUsers, point.UserID) {
 			rows2, err := db.Query(`
 				select user_id, timestamp from points
 				where user_id = ? and timestamp > ?
-			`, point.UserID, time.Now().AddDate(0, 0, 0-Config.StreakDays).Format("2006-01-02") + "%")
-		
+			`, point.UserID, time.Now().AddDate(0, 0, 0-Config.StreakDays).Format("2006-01-02")+"%")
+
 			if err != nil {
 				return nil, nil, err
 			}
 			defer rows2.Close()
-		
+
 			var points []Point
-		
+
 			for rows2.Next() {
 				var point Point
-		
+
 				if err := rows2.Scan(&point.UserID, &point.Timestamp); err != nil {
 					return nil, nil, err
 				}
-				
+
 				points = append(points, point)
 			}
-		
+
 			if len(points) >= 3 {
 				// create streak
 				streak := Streak{
-					UserID: point.UserID,
+					UserID:    point.UserID,
 					StartTime: points[0].Timestamp,
-					EndTime: point.Timestamp,
+					EndTime:   point.Timestamp,
 				}
 
 				err := CreateStreak(db, streak)

@@ -8,14 +8,19 @@ import (
 
 type Message struct {
 	Timestamp time.Time
-	Username string
-	Message string
+	Username  string
+	Message   string
 }
 
 var Messages []Message
 var lastMesssageSent = time.Now().Add(-3 * time.Hour)
+var enabled = false
 
 func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if enabled == false {
+		return
+	}
+
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
@@ -27,8 +32,8 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 	Messages = RefreshChatlog(
 		Message{
 			Timestamp: m.Timestamp,
-			Username: m.Author.Username,
-			Message: m.Content,
+			Username:  m.Author.Username,
+			Message:   m.Content,
 		},
 	)
 

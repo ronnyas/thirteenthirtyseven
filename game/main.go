@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -15,7 +16,7 @@ type leaderboardConfig struct {
 
 var Config struct {
 	mainChannel string
-	db 			*sql.DB
+	db          *sql.DB
 	StreakDays  int
 }
 
@@ -43,7 +44,7 @@ func calculatePointsFromTimestamp(timestamp time.Time) int {
 	}
 
 	points := 60 - timestamp.Second()
-	
+
 	return points
 }
 
@@ -59,18 +60,20 @@ func generateLeaderboardMessage(prefix string, rows *sql.Rows) (string, error) {
 			return "", err
 		}
 
+		pointsFormatted := formatNumber(points)
+
 		switch rank {
-			case 1:
-				leaderboardMessage += ":first_place: "
-			case 2:
-				leaderboardMessage += ":second_place: "
-			case 3:
-				leaderboardMessage += ":third_place: "
-			default:
-				leaderboardMessage += ":medal: "
+		case 1:
+			leaderboardMessage += ":first_place: "
+		case 2:
+			leaderboardMessage += ":second_place: "
+		case 3:
+			leaderboardMessage += ":third_place: "
+		default:
+			leaderboardMessage += ":medal: "
 		}
 
-		leaderboardMessage += fmt.Sprintf("%s %d\n", userID, points)
+		leaderboardMessage += fmt.Sprintf("%s %s\n", userID, pointsFormatted)
 		rank++
 	}
 
@@ -89,11 +92,11 @@ func SavePoints(userID string, points int) bool {
 		log.Fatal(err)
 		return false
 	}
-	
+
 	if count > 0 {
 		return false
-	} 
-		
+	}
+
 	sqlStmt = `
 	insert into points (timestamp, user_id, points) 
 	values (?, ?, ?);
@@ -105,4 +108,16 @@ func SavePoints(userID string, points int) bool {
 	}
 
 	return true
+}
+
+func formatNumber(number int) string {
+	var formattedInt string
+	for i, r := range strconv.Itoa(number) {
+		if i > 0 && (len(strconv.Itoa(number))-i)%3 == 0 {
+			formattedInt += ","
+		}
+		formattedInt += string(r)
+	}
+
+	return formattedInt
 }
