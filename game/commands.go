@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -23,9 +24,9 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if current_time.Hour() != 13 || current_time.Minute() != 37 {
 			return
 		}
-		
+
 		points := calculatePointsFromTimestamp(m.Timestamp)
-		
+
 		save := SavePoints(m.Author.Username, points)
 		if save {
 			s.MessageReactionAdd(m.ChannelID, m.ID, "1337:1079824982613442580")
@@ -48,19 +49,19 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 				prefix:  "\n\n**Leaderboard this week:**\n",
 			},
 		}
-	
+
 		for _, config := range leaderboardConfigs {
 			rows, err := db.Query(config.sqlStmt)
 			if err != nil {
 				panic(err)
 			}
 			defer rows.Close()
-	
+
 			leaderboardMessage, err := generateLeaderboardMessage(config.prefix, rows)
 			if err != nil {
 				panic(err)
 			}
-	
+
 			err = rows.Err()
 			if err != nil {
 				panic(err)
@@ -70,7 +71,6 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 				leaderboardMessage += "No points yet!"
 			}
 
-	
 			s.ChannelMessageSend(m.ChannelID, leaderboardMessage)
 		}
 	}
@@ -93,6 +93,36 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		s.ChannelMessageSend(m.ChannelID, streakMsg)
-	
 	}
+
+	if m.Content == ".flip" || m.Content == ".flip mynt" || m.Content == ".flip krone" {
+		var outcome string
+		flip := rand.Intn(2)
+
+		switch m.Content {
+		case ".flip mynt":
+			outcome = "Mynt"
+			if flip == 0 {
+				s.ChannelMessageSend(m.ChannelID, "Gratulerer du vant.")
+			} else {
+				s.ChannelMessageSend(m.ChannelID, "Desverre du tapte.")
+			}
+		case ".flip krone":
+			outcome = "Krone"
+			if flip == 0 {
+				s.ChannelMessageSend(m.ChannelID, "Desverre du tapte.")
+			} else {
+				s.ChannelMessageSend(m.ChannelID, "Gratulerer du vant.")
+			}
+		case ".flip":
+			if flip == 0 {
+				outcome = "Mynt"
+			} else {
+				outcome = "Krone"
+			}
+		}
+
+		s.ChannelMessageSend(m.ChannelID, outcome)
+	}
+
 }
