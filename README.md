@@ -2,6 +2,7 @@
 ```
 export MAINCHANNEL=..
 export TOKEN=..
+export OPENAIKEY=..
 go run main.go 
 ```
 
@@ -26,6 +27,7 @@ services:
     environment:
       TOKEN: "YOUR-DISCORD-TOKEN"
       MAINCHANNEL: "MAIN-CHANNEL-ID"
+      OPENAIKEY: "OPENAI-KEY"
       DATABASEPATH: "/app/data/thirteenthirtyseven.db"
     volumes:
       - ./database:/app/data
