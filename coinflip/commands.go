@@ -11,10 +11,6 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	if m.ChannelID != Config.mainChannel {
-		return
-	}
-
 	if m.Content == ".flip" || m.Content == ".flip mynt" || m.Content == ".flip krone" {
 		var outcome string
 		flip := rand.Intn(2)
