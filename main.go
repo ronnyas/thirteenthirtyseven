@@ -63,7 +63,7 @@ func main() {
 	leet.SetMainChannel(cfg.MainChannel)
 	leet.SetStreakDays(cfg.StreakDays)
 
-	//discord.AddHandler(game.Commands)
+	discord.AddHandler(game.Commands)
 	game.SetDatabase(db)
 	game.SetMainChannel(cfg.MainChannel)
 
