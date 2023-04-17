@@ -3,6 +3,8 @@ package game
 import (
 	"testing"
 	"time"
+
+	"github.com/ronnyas/thirteenthirtyseven/leet"
 )
 
 func Test_calculatePointsFromTimestamp(t *testing.T) {
@@ -24,7 +26,7 @@ func Test_calculatePointsFromTimestamp(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := calculatePointsFromTimestamp(tt.args.timestamp); got != tt.want {
+			if got := leet.CalculatePointsFromTimestamp(tt.args.timestamp); got != tt.want {
 				t.Errorf("calculatePointsFromTimestamp() = %v, want %v", got, tt.want)
 			}
 		})

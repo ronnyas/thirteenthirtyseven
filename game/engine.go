@@ -1,12 +1,19 @@
 package game
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/ronnyas/thirteenthirtyseven/leet"
 )
+
+var Config struct {
+	mainChannel string
+	db          *sql.DB
+}
 
 func StartEngine(s *discordgo.Session) {
 	db := Config.db
@@ -21,7 +28,7 @@ func StartEngine(s *discordgo.Session) {
 			}
 			last_report = current_time.Format("2006-01-02")
 			log.Println(last_report)
-	
+
 			sqlStmt := `
 				select user_id, sum(points) from points
 				where timestamp >= date('now', 'start of day')
@@ -35,7 +42,7 @@ func StartEngine(s *discordgo.Session) {
 			}
 			defer rows.Close()
 
-			leaderboardMessage, err := generateLeaderboardMessage(
+			leaderboardMessage, err := leet.GenerateLeaderboardMessage(
 				"Time's up! Here's todays points:\n",
 				rows,
 			)
@@ -45,9 +52,9 @@ func StartEngine(s *discordgo.Session) {
 			}
 
 			s.ChannelMessageSend(mainChannel, leaderboardMessage)
-			
+
 			// update streaks
-			_, brokenStreaks, err := UpdateAllStreaks(db)
+			_, brokenStreaks, err := leet.UpdateAllStreaks(db)
 			if err != nil {
 				log.Fatal(err)
 				continue

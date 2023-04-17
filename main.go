@@ -17,6 +17,7 @@ import (
 	"github.com/ronnyas/thirteenthirtyseven/config"
 	"github.com/ronnyas/thirteenthirtyseven/database"
 	"github.com/ronnyas/thirteenthirtyseven/game"
+	"github.com/ronnyas/thirteenthirtyseven/leet"
 )
 
 func main() {
@@ -56,10 +57,14 @@ func main() {
 		}
 	})
 
-	discord.AddHandler(game.Commands)
+	discord.AddHandler(leet.Commands)
+	leet.SetDatabase(db)
+	leet.SetMainChannel(cfg.MainChannel)
+	leet.SetStreakDays(cfg.StreakDays)
+
+	//discord.AddHandler(game.Commands)
 	game.SetDatabase(db)
 	game.SetMainChannel(cfg.MainChannel)
-	game.SetStreakDays(cfg.StreakDays)
 
 	discord.AddHandler(chat.Commands)
 	chat.SetOpenAIKey(cfg.OpenAIKey)
@@ -78,7 +83,7 @@ func main() {
 	err = row.Scan(&id)
 	if err != nil {
 		log.Println("No streaks found, backfilling")
-		game.BackfillStreaks(db)
+		leet.BackfillStreaks(db)
 	}
 
 	discord.Identify.Intents = discordgo.IntentsGuildMessages
