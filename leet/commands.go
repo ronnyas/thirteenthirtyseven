@@ -18,7 +18,6 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if m.Content == "1337" {
-		s.ChannelMessageSend(m.ChannelID, "TEST!!!!!")
 		current_time := time.Now()
 
 		if current_time.Hour() != 13 || current_time.Minute() != 37 {
@@ -31,7 +30,6 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if save {
 			s.MessageReactionAdd(m.ChannelID, m.ID, "1337:1079824982613442580")
 		}
-
 	}
 
 	if m.Content == "1337 lb" {
@@ -94,5 +92,4 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		s.ChannelMessageSend(m.ChannelID, streakMsg)
 	}
-
 }
