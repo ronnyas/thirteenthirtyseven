@@ -18,6 +18,7 @@ import (
 	"github.com/ronnyas/thirteenthirtyseven/database"
 	"github.com/ronnyas/thirteenthirtyseven/game"
 	"github.com/ronnyas/thirteenthirtyseven/leet"
+	"github.com/ronnyas/thirteenthirtyseven/norris"
 )
 
 func main() {
@@ -70,7 +71,7 @@ func main() {
 	chat.SetOpenAIKey(cfg.OpenAIKey)
 
 	discord.AddHandler(coinflip.Commands)
-	coinflip.SetMainChannel(cfg.MainChannel)
+	discord.AddHandler(norris.Commands)
 
 	// discord.AddHandler(chat.Commands)
 	// chat.SetOpenAIKey(cfg.OpenAIKey)
