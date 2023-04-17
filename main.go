@@ -13,11 +13,11 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/ronnyas/thirteenthirtyseven/chat"
+	"github.com/ronnyas/thirteenthirtyseven/coinflip"
 	"github.com/ronnyas/thirteenthirtyseven/config"
 	"github.com/ronnyas/thirteenthirtyseven/database"
 	"github.com/ronnyas/thirteenthirtyseven/game"
 )
-
 
 func main() {
 	log.Println("Loading config")
@@ -31,13 +31,13 @@ func main() {
 		field := key.Field(i)
 		log.Println("\t" + key.Type().Field(i).Name + ": " + fmt.Sprintf("%v", field.Interface()))
 	}
-	
+
 	db, err := database.Connect(cfg.DatabasePath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	
+
 	err = database.SetupDatabaseSchema(db)
 	if err != nil {
 		log.Fatal(err)
@@ -56,7 +56,6 @@ func main() {
 		}
 	})
 
-	
 	discord.AddHandler(game.Commands)
 	game.SetDatabase(db)
 	game.SetMainChannel(cfg.MainChannel)
@@ -64,6 +63,9 @@ func main() {
 
 	discord.AddHandler(chat.Commands)
 	chat.SetOpenAIKey(cfg.OpenAIKey)
+
+	discord.AddHandler(coinflip.Commands)
+	coinflip.SetMainChannel(cfg.MainChannel)
 
 	// discord.AddHandler(chat.Commands)
 	// chat.SetOpenAIKey(cfg.OpenAIKey)
@@ -80,18 +82,18 @@ func main() {
 	}
 
 	discord.Identify.Intents = discordgo.IntentsGuildMessages
-	
+
 	err = discord.Open()
 	if err != nil {
 		log.Fatal("Can't connect to discord: ", err)
 		return
 	}
-	
+
 	go game.StartEngine(discord)
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
-	
+
 	discord.Close()
 }
