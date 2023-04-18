@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/ronnyas/thirteenthirtyseven/game/leet"
 	"github.com/ronnyas/thirteenthirtyseven/language"
-	"github.com/ronnyas/thirteenthirtyseven/leet"
 )
 
 var Config struct {

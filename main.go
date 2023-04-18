@@ -12,17 +12,19 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/ronnyas/thirteenthirtyseven/coinflip"
+	"github.com/ronnyas/thirteenthirtyseven/chat/norris"
 	"github.com/ronnyas/thirteenthirtyseven/config"
 	"github.com/ronnyas/thirteenthirtyseven/database"
 	"github.com/ronnyas/thirteenthirtyseven/game"
+	"github.com/ronnyas/thirteenthirtyseven/game/coinflip"
+	"github.com/ronnyas/thirteenthirtyseven/game/leet"
 	"github.com/ronnyas/thirteenthirtyseven/language"
-	"github.com/ronnyas/thirteenthirtyseven/leet"
-	"github.com/ronnyas/thirteenthirtyseven/norris"
 )
 
 func main() {
+
 	language.SetLanguage("no")
+
 	log.Println(language.GetTranslation("main_config_load"))
 	cfg := config.LoadConfig()
 

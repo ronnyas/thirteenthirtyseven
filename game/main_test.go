@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ronnyas/thirteenthirtyseven/leet"
+	"github.com/ronnyas/thirteenthirtyseven/game/leet"
 )
 
 func Test_calculatePointsFromTimestamp(t *testing.T) {
