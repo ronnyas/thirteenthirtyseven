@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ronnyas/thirteenthirtyseven/language"
 	"golang.org/x/exp/slices"
 )
 
@@ -60,7 +61,7 @@ func BackfillStreaks(db *sql.DB) error {
 		}
 
 		if streak.UserID == "" {
-			log.Printf("new streak for %s", userID)
+			log.Printf(language.GetTranslation("streak_new"), userID)
 			streak.UserID = userID
 			streak.StartTime = timestamp
 			streak.EndTime = timestamp
@@ -85,17 +86,17 @@ func BackfillStreaks(db *sql.DB) error {
 			t = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 
 			if end.AddDate(0, 0, 1).Equal(t) {
-				log.Printf("continuing streak for %s", userID)
+				log.Printf(language.GetTranslation("streak_continue"), userID)
 				streak.EndTime = timestamp
 			} else {
-				log.Printf("new streak for %s, because %s != %s", userID, end.AddDate(0, 0, 1), t)
+				log.Printf(language.GetTranslation("streak_new_because"), userID, end.AddDate(0, 0, 1), t)
 				streaks = append(streaks, streak)
 				streak.UserID = userID
 				streak.StartTime = timestamp
 				streak.EndTime = timestamp
 			}
 		} else {
-			log.Printf("new streak for %s", userID)
+			log.Printf(language.GetTranslation("streak_new"), userID)
 			streak.UserID = userID
 			streak.StartTime = timestamp
 			streak.EndTime = timestamp

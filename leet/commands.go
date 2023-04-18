@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/ronnyas/thirteenthirtyseven/language"
 )
 
 func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -39,12 +40,12 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 			{
 				name:    "all time",
 				sqlStmt: "select user_id, sum(points) from points group by user_id order by sum(points) desc limit 10;",
-				prefix:  "\n\n**Leaderboard all time:**\n",
+				prefix:  language.GetTranslation("leet_lb_alltime"),
 			},
 			{
 				name:    "this week",
 				sqlStmt: "select user_id, sum(points) from points where date(timestamp) >= date('now', 'weekday 0', '-6 days') group by user_id order by sum(points) desc limit 10;",
-				prefix:  "\n\n**Leaderboard this week:**\n",
+				prefix:  language.GetTranslation("leet_lb_week"),
 			},
 		}
 
@@ -66,7 +67,7 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 
 			if len(leaderboardMessage) == len(config.prefix) {
-				leaderboardMessage += "No points yet!"
+				leaderboardMessage += language.GetTranslation("leet_lb_nopoints")
 			}
 
 			s.ChannelMessageSend(m.ChannelID, leaderboardMessage)
@@ -81,13 +82,13 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		// check if there are any active streaks
 		if len(streaks) == 0 {
-			s.ChannelMessageSend(m.ChannelID, "No active streaks :(")
+			s.ChannelMessageSend(m.ChannelID, language.GetTranslation("leet_lb_nostreak"))
 			return
 		}
 		streakMsg := "Active streaks:\n"
 		for _, streak := range streaks {
 			streakDuration := streak.Duration()
-			streakMsg += fmt.Sprintf("%s: %d days\n", streak.UserID, streakDuration)
+			streakMsg += fmt.Sprintf(language.GetTranslation("leet_days"), streak.UserID, streakDuration)
 		}
 
 		s.ChannelMessageSend(m.ChannelID, streakMsg)

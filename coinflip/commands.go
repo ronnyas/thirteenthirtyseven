@@ -4,6 +4,7 @@ import (
 	"math/rand"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/ronnyas/thirteenthirtyseven/language"
 )
 
 func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -11,30 +12,35 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	if m.Content == ".flip" || m.Content == ".flip mynt" || m.Content == ".flip krone" {
+	head := ".flip " + language.GetTranslation("coin_lhead")
+	tail := ".flip " + language.GetTranslation("coin_ltail")
+
+	if m.Content == ".flip" || m.Content == head || m.Content == tail {
 		var outcome string
 		flip := rand.Intn(2)
 
 		switch m.Content {
-		case ".flip mynt":
-			outcome = "Mynt"
+		case head:
 			if flip == 0 {
-				s.ChannelMessageSend(m.ChannelID, "Gratulerer du vant.")
+				s.ChannelMessageSend(m.ChannelID, language.GetTranslation("coin_congrats"))
+				outcome = language.GetTranslation("coin_head")
 			} else {
-				s.ChannelMessageSend(m.ChannelID, "Desverre du tapte.")
+				s.ChannelMessageSend(m.ChannelID, language.GetTranslation("coin_sorry"))
+				outcome = language.GetTranslation("coin_tail")
 			}
-		case ".flip krone":
-			outcome = "Krone"
+		case tail:
 			if flip == 0 {
-				s.ChannelMessageSend(m.ChannelID, "Desverre du tapte.")
+				s.ChannelMessageSend(m.ChannelID, language.GetTranslation("coin_sorry"))
+				outcome = language.GetTranslation("coin_head")
 			} else {
-				s.ChannelMessageSend(m.ChannelID, "Gratulerer du vant.")
+				s.ChannelMessageSend(m.ChannelID, language.GetTranslation("coin_congrats"))
+				outcome = language.GetTranslation("coin_tail")
 			}
 		case ".flip":
 			if flip == 0 {
-				outcome = "Mynt"
+				outcome = language.GetTranslation("coin_head")
 			} else {
-				outcome = "Krone"
+				outcome = language.GetTranslation("coin_tail")
 			}
 		}
 

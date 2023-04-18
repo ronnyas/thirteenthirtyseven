@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/ronnyas/thirteenthirtyseven/language"
 	"github.com/ronnyas/thirteenthirtyseven/leet"
 )
 
@@ -18,7 +19,7 @@ var Config struct {
 func StartEngine(s *discordgo.Session) {
 	db := Config.db
 	mainChannel := Config.mainChannel
-	log.Println("Game engine started")
+	log.Println(language.GetTranslation("game_started"))
 	var last_report string = ""
 	for {
 		current_time := time.Now()
@@ -43,7 +44,7 @@ func StartEngine(s *discordgo.Session) {
 			defer rows.Close()
 
 			leaderboardMessage, err := leet.GenerateLeaderboardMessage(
-				"Time's up! Here's todays points:\n",
+				language.GetTranslation("game_gen_lb_msg"),
 				rows,
 			)
 			if err != nil {
@@ -60,7 +61,7 @@ func StartEngine(s *discordgo.Session) {
 				continue
 			}
 			for _, brokenStreak := range brokenStreaks {
-				s.ChannelMessageSend(mainChannel, fmt.Sprintf("%s broke their streak of %d days", brokenStreak.UserID, brokenStreak.Duration()))
+				s.ChannelMessageSend(mainChannel, fmt.Sprintf(language.GetTranslation("game_lb_broke_streak"), brokenStreak.UserID, brokenStreak.Duration()))
 			}
 
 			time.Sleep(60 * time.Second)

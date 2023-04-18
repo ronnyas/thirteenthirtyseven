@@ -12,21 +12,22 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/ronnyas/thirteenthirtyseven/chat"
 	"github.com/ronnyas/thirteenthirtyseven/coinflip"
 	"github.com/ronnyas/thirteenthirtyseven/config"
 	"github.com/ronnyas/thirteenthirtyseven/database"
 	"github.com/ronnyas/thirteenthirtyseven/game"
+	"github.com/ronnyas/thirteenthirtyseven/language"
 	"github.com/ronnyas/thirteenthirtyseven/leet"
 	"github.com/ronnyas/thirteenthirtyseven/norris"
 )
 
 func main() {
-	log.Println("Loading config")
+	language.SetLanguage("no")
+	log.Println(language.GetTranslation("main_config_load"))
 	cfg := config.LoadConfig()
 
-	log.Println("Starting bot")
-	log.Println("Config:")
+	log.Println(language.GetTranslation("main_starting_bot"))
+	log.Println(language.GetTranslation("main_config"))
 
 	key := reflect.ValueOf(cfg).Elem()
 	for i := 0; i < key.NumField(); i++ {
@@ -48,7 +49,7 @@ func main() {
 
 	discord, err := discordgo.New("Bot " + cfg.Token)
 	if err != nil {
-		log.Fatal("Unable to initialize discord session,", err)
+		log.Fatal(language.GetTranslation("main_cant_init_discord"), err)
 		return
 	}
 
@@ -67,14 +68,8 @@ func main() {
 	game.SetDatabase(db)
 	game.SetMainChannel(cfg.MainChannel)
 
-	discord.AddHandler(chat.Commands)
-	chat.SetOpenAIKey(cfg.OpenAIKey)
-
 	discord.AddHandler(coinflip.Commands)
 	discord.AddHandler(norris.Commands)
-
-	// discord.AddHandler(chat.Commands)
-	// chat.SetOpenAIKey(cfg.OpenAIKey)
 
 	// temp code
 	// check if there are any data in the streaks table. if not , run BackfillStreaks
@@ -83,7 +78,7 @@ func main() {
 	var id int
 	err = row.Scan(&id)
 	if err != nil {
-		log.Println("No streaks found, backfilling")
+		log.Println(language.GetTranslation("main_no_streak_backfill"))
 		leet.BackfillStreaks(db)
 	}
 
@@ -91,7 +86,7 @@ func main() {
 
 	err = discord.Open()
 	if err != nil {
-		log.Fatal("Can't connect to discord: ", err)
+		log.Fatal(language.GetTranslation("main_cant_conn_discord"), err)
 		return
 	}
 
