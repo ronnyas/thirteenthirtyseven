@@ -56,22 +56,77 @@ func main() {
 	}
 
 	discord.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
+
 		if m.Content == ".time" {
-			s.ChannelMessageSend(m.ChannelID, time.Now().Format("2006-01-02 15:04:05"))
+			s.ChannelMessageSend(m.ChannelID, time.Now().Format("2006-01-02 15:04:05.000"))
+			s.ChannelMessageSend(m.ChannelID, m.Timestamp.Format("2006-01-02 15:04:05.000"))
+		}
+
+		if m.Content == ".setup" {
+			server, err := s.Guild(m.GuildID)
+			if err != nil {
+				log.Println("s.state.guild: ", err)
+				return
+			}
+
+			if m.Author.ID == server.OwnerID {
+				checkCfg := db.QueryRow("SELECT id FROM `config` WHERE `serverid` = " + m.GuildID)
+				var id int
+				err = checkCfg.Scan(&id)
+				if err != nil {
+					s.ChannelMessageSend(m.ChannelID, "No configdata, Inserting...")
+					qStmt := "INSERT INTO config (serverid, name, value) VALUES(?, ?, ?)"
+					type ConfigStuff struct {
+						Name  string
+						Value string
+					}
+
+					var config []ConfigStuff = []ConfigStuff{
+						{
+							Name:  "leet_mainchannel",
+							Value: "false",
+						},
+						{
+							Name:  "leet_active",
+							Value: "false",
+						},
+						{
+							Name:  "leet_streakdays",
+							Value: "3",
+						},
+						{
+							Name:  "mafia_mainchannel",
+							Value: "false",
+						},
+						{
+							Name:  "mafia_active",
+							Value: "false",
+						},
+					}
+
+					for _, conf := range config {
+						_, err := db.Exec(qStmt, m.GuildID, conf.Name, conf.Value)
+						if err != nil {
+							log.Println("Can't insert default config:", err)
+							s.ChannelMessageSend(m.ChannelID, "Something went wrong.")
+							return
+						}
+					}
+					s.ChannelMessageSend(m.ChannelID, "Done inserting to the database.")
+				}
+			} else {
+				s.ChannelMessageSend(m.ChannelID, "Only the server owner/creator can run this")
+			}
 		}
 	})
 
 	discord.AddHandler(leet.Commands)
-	leet.SetDatabase(db)
-	leet.SetMainChannel(cfg.MainChannel)
-	leet.SetStreakDays(cfg.StreakDays)
-
 	discord.AddHandler(game.Commands)
-	game.SetDatabase(db)
-	game.SetMainChannel(cfg.MainChannel)
-
 	discord.AddHandler(coinflip.Commands)
 	discord.AddHandler(norris.Commands)
+
+	leet.SetDatabase(db)
+	game.SetDatabase(db)
 
 	// temp code
 	// check if there are any data in the streaks table. if not , run BackfillStreaks
@@ -84,7 +139,9 @@ func main() {
 		leet.BackfillStreaks(db)
 	}
 
-	discord.Identify.Intents = discordgo.IntentsGuildMessages
+	// https://discord-intents-calculator.vercel.app/
+	// guild_presences, guild_messages, guild_message_reactions, direct_messages, direct_message_reactions
+	discord.Identify.Intents = 13824
 
 	err = discord.Open()
 	if err != nil {

@@ -18,7 +18,7 @@ var Config struct {
 
 func StartEngine(s *discordgo.Session) {
 	db := Config.db
-	mainChannel := Config.mainChannel
+
 	log.Println(language.GetTranslation("game_started"))
 	var last_report string = ""
 	for {
@@ -39,7 +39,7 @@ func StartEngine(s *discordgo.Session) {
 			`
 			rows, err := db.Query(sqlStmt)
 			if err != nil {
-				panic(err)
+				log.Println(err)
 			}
 			defer rows.Close()
 
@@ -48,20 +48,39 @@ func StartEngine(s *discordgo.Session) {
 				rows,
 			)
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 				continue
 			}
 
-			s.ChannelMessageSend(mainChannel, leaderboardMessage)
+			servers, err := GetServers()
+			if err != nil {
+				log.Println("Error getting servers: ", err)
+				return
+			}
+
+			for _, channels := range servers {
+				mainChannel, err := leet.GetMainChannel(channels)
+				if err != nil {
+					log.Println("Error getting mainchannel to leaderboardmessage: ", err)
+				}
+				s.ChannelMessageSend(mainChannel, leaderboardMessage)
+			}
 
 			// update streaks
 			_, brokenStreaks, err := leet.UpdateAllStreaks(db)
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 				continue
 			}
 			for _, brokenStreak := range brokenStreaks {
-				s.ChannelMessageSend(mainChannel, fmt.Sprintf(language.GetTranslation("game_lb_broke_streak"), brokenStreak.UserID, brokenStreak.Duration()))
+				for _, channels := range servers {
+					mainChannel, err := leet.GetMainChannel(channels)
+					if err != nil {
+						log.Println("Error getting mainchannel to brokenstreak: ", err)
+						return
+					}
+					s.ChannelMessageSend(mainChannel, fmt.Sprintf(language.GetTranslation("game_lb_broke_streak"), brokenStreak.UserID, brokenStreak.Duration()))
+				}
 			}
 
 			time.Sleep(60 * time.Second)

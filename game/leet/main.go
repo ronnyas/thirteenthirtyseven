@@ -18,16 +18,68 @@ var Config struct {
 	mainChannel string
 	db          *sql.DB
 	StreakDays  int
+	Active      string
+}
+
+func VarDump(whatever interface{}) {
+	fmt.Printf("%#v\n", whatever)
 }
 
 func SetDatabase(db *sql.DB) {
 	Config.db = db
 }
-func SetMainChannel(channelID string) {
-	Config.mainChannel = channelID
+
+func GetServers() ([]string, error) {
+	query := `SELECT DISTINCT serverid FROM config`
+	rows, err := Config.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("error querying database: %s", err)
+	}
+	defer rows.Close()
+
+	var serverIDs []string
+	for rows.Next() {
+		var serverID string
+		if err := rows.Scan(&serverID); err != nil {
+			log.Println("Error scanning row:", err)
+			continue
+		}
+		serverIDs = append(serverIDs, serverID)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %s", err)
+	}
+	return serverIDs, nil
 }
-func SetStreakDays(days int) {
-	Config.StreakDays = days
+
+func GetMainChannel(serverID string) (string, error) {
+	query := `SELECT value FROM config WHERE serverid = ? AND name = 'leet_mainchannel'`
+	var mainChannelValue string
+	err := Config.db.QueryRow(query, serverID).Scan(&mainChannelValue)
+	if err != nil {
+		return "", err
+	}
+	return mainChannelValue, nil
+}
+
+func GetStreakDays(serverID string) (string, error) {
+	query := `SELECT value FROM config WHERE server = ? AND name = 'leet_streakdays'`
+	var streakDaysValue string
+	err := Config.db.QueryRow(query, serverID).Scan(&streakDaysValue)
+	if err != nil {
+		return "", err
+	}
+	return streakDaysValue, nil
+}
+
+func GetServerStatus(serverID string) (string, error) {
+	query := `SELECT value FROM config WHERE server = ? AND name = 'leet_active'`
+	var serverStatus string
+	err := Config.db.QueryRow(query, serverID).Scan(&serverStatus)
+	if err != nil {
+		return "", err
+	}
+	return serverStatus, err
 }
 
 func CalculatePointsFromTimestamp(timestamp time.Time) int {
@@ -35,12 +87,12 @@ func CalculatePointsFromTimestamp(timestamp time.Time) int {
 
 	loc, err := time.LoadLocation("UTC")
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	timestamp, err = time.ParseInLocation(layout, timestamp.Format(layout), loc)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	points := 60 - timestamp.Second()
