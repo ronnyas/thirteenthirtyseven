@@ -142,14 +142,6 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}
 
-	if m.Content == ".getchannelid" {
-		s.ChannelMessageSend(m.ChannelID, m.ChannelID)
-	}
-
-	if m.Content == ".getserverid" {
-		s.ChannelMessageSend(m.ChannelID, m.GuildID)
-	}
-
 	if m.Content == "1337 streak" {
 		streaks, err := GetActiveStreaks(Config.db)
 		if err != nil {

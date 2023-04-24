@@ -1,15 +1,19 @@
 package coinflip
 
 import (
+	"math/rand"
+
 	"github.com/bwmarrin/discordgo"
+	"github.com/ronnyas/thirteenthirtyseven/language"
 )
 
+/*
 func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
 
-	/*if m.Content == ".test" {
+	if m.Content == ".test" {
 		channel, err := s.Channel(m.ChannelID)
 		if err != nil {
 			log.Println("channel error: ", err)
@@ -22,10 +26,10 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, "Channel send")
 
 		}
-	}*/
-}
+	}
+}*/
 
-/*func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
+func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
@@ -65,4 +69,4 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageSend(m.ChannelID, outcome)
 	}
 
-}*/
+}
