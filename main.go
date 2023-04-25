@@ -58,17 +58,13 @@ func main() {
 	discord.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		if m.Content == ".time" {
+			discordTime := m.Timestamp
 			systemTime := time.Now()
-			discordTime, err := time.Parse("2006-01-02 15:04:05.000", m.Timestamp.Format("2006-01-02 15:04:05.000"))
-			if err != nil {
-				return
-			}
-			diff := discordTime.Sub(systemTime)
+			diff := systemTime.Sub(discordTime)
 
-			s.ChannelMessageSend(m.ChannelID, "systsemtime: "+systemTime.String())
-			s.ChannelMessageSend(m.ChannelID, "discordtime: "+discordTime.String())
-			s.ChannelMessageSend(m.ChannelID, "discordtime.sub(systemtime): "+diff.String())
-
+			s.ChannelMessageSend(m.ChannelID, "system time: "+systemTime.String())
+			s.ChannelMessageSend(m.ChannelID, "discord time: "+discordTime.String())
+			s.ChannelMessageSend(m.ChannelID, "time difference: "+diff.String())
 		}
 
 		if m.Content == ".setup" {

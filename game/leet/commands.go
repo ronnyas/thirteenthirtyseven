@@ -5,7 +5,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/ronnyas/thirteenthirtyseven/config"
@@ -87,7 +86,7 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if m.Content == "1337" {
-		current_time := time.Now()
+		current_time := m.Timestamp
 
 		if current_time.Hour() != 13 || current_time.Minute() != 37 {
 			return
