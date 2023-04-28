@@ -1,10 +1,6 @@
 package game
 
 import (
-	"fmt"
-	"log"
-	"time"
-
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -13,86 +9,31 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	if m.ChannelID != Config.mainChannel {
-		return
+	if m.Content == ".help" {
+		var output string
+		output += ".help\n"
+		output += ".setup\n"
+		output += ".time\n"
+		output += "1337\n"
+		output += "1337 lb\n"
+		output += "1337 streak\n"
+		output += "1337 setmain <channelid>\n"
+		output += "1337 setactive <true|false>\n"
+		output += "1337 setstreak <3>\n"
+		output += ".getchannelid\n"
+		output += ".getserverid\n"
+		output += ".norris\n"
+		output += ".flip\n"
+		output += ".flip <mynt|krone>\n"
+
+		s.ChannelMessageSend(m.ChannelID, output)
 	}
 
-	if m.Content == "1337" {
-		current_time := time.Now()
-
-		if current_time.Hour() != 13 || current_time.Minute() != 37 {
-			return
-		}
-		
-		points := calculatePointsFromTimestamp(m.Timestamp)
-		
-		save := SavePoints(m.Author.Username, points)
-		if save {
-			s.MessageReactionAdd(m.ChannelID, m.ID, "1337:1079824982613442580")
-		}
-
+	if m.Content == ".getchannelid" {
+		s.ChannelMessageSend(m.ChannelID, m.ChannelID)
 	}
 
-	if m.Content == "1337 lb" {
-		db := Config.db
-
-		leaderboardConfigs := []leaderboardConfig{
-			{
-				name:    "all time",
-				sqlStmt: "select user_id, sum(points) from points group by user_id order by sum(points) desc limit 10;",
-				prefix:  "\n\n**Leaderboard all time:**\n",
-			},
-			{
-				name:    "this week",
-				sqlStmt: "select user_id, sum(points) from points where date(timestamp) >= date('now', 'weekday 0', '-6 days') group by user_id order by sum(points) desc limit 10;",
-				prefix:  "\n\n**Leaderboard this week:**\n",
-			},
-		}
-	
-		for _, config := range leaderboardConfigs {
-			rows, err := db.Query(config.sqlStmt)
-			if err != nil {
-				panic(err)
-			}
-			defer rows.Close()
-	
-			leaderboardMessage, err := generateLeaderboardMessage(config.prefix, rows)
-			if err != nil {
-				panic(err)
-			}
-	
-			err = rows.Err()
-			if err != nil {
-				panic(err)
-			}
-
-			if len(leaderboardMessage) == len(config.prefix) {
-				leaderboardMessage += "No points yet!"
-			}
-
-	
-			s.ChannelMessageSend(m.ChannelID, leaderboardMessage)
-		}
-	}
-
-	if m.Content == "1337 streak" {
-		streaks, err := GetActiveStreaks(Config.db)
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-		// check if there are any active streaks
-		if len(streaks) == 0 {
-			s.ChannelMessageSend(m.ChannelID, "No active streaks :(")
-			return
-		}
-		streakMsg := "Active streaks:\n"
-		for _, streak := range streaks {
-			streakDuration := streak.Duration()
-			streakMsg += fmt.Sprintf("%s: %d days\n", streak.UserID, streakDuration)
-		}
-
-		s.ChannelMessageSend(m.ChannelID, streakMsg)
-	
+	if m.Content == ".getserverid" {
+		s.ChannelMessageSend(m.ChannelID, m.GuildID)
 	}
 }

@@ -33,6 +33,14 @@ func SetupDatabaseSchema(db *sql.DB) error {
 			start_time text not null,
 			end_time text not null
 		);
+
+		CREATE TABLE IF NOT EXISTS
+		config (
+			id integer NOT NULL primary key,
+			serverid text NOT NULL,
+			name text NOT NULL,
+			value text NOT NULL
+		);
 	`)
 	if err != nil {
 		return err

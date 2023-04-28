@@ -14,6 +14,7 @@ COPY --from=builder /app/main .
 
 # ENV TOKEN "token, if not using docker-compose"
 # ENV MAINCHANNEL "..if not using docker-compose"
+# ENB OPENAIKEY "..if not using docker-compose"
 # ENV DATABASEPATH "...same"
 
 CMD ["./main"]

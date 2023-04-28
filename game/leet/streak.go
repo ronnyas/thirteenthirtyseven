@@ -1,4 +1,4 @@
-package game
+package leet
 
 import (
 	"database/sql"
@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ronnyas/thirteenthirtyseven/language"
 	"golang.org/x/exp/slices"
 )
 
@@ -60,7 +61,7 @@ func BackfillStreaks(db *sql.DB) error {
 		}
 
 		if streak.UserID == "" {
-			log.Printf("new streak for %s", userID)
+			log.Printf(language.GetTranslation("streak_new"), userID)
 			streak.UserID = userID
 			streak.StartTime = timestamp
 			streak.EndTime = timestamp
@@ -85,17 +86,17 @@ func BackfillStreaks(db *sql.DB) error {
 			t = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 
 			if end.AddDate(0, 0, 1).Equal(t) {
-				log.Printf("continuing streak for %s", userID)
+				log.Printf(language.GetTranslation("streak_continue"), userID)
 				streak.EndTime = timestamp
 			} else {
-				log.Printf("new streak for %s, because %s != %s", userID, end.AddDate(0, 0, 1), t)
+				log.Printf(language.GetTranslation("streak_new_because"), userID, end.AddDate(0, 0, 1), t)
 				streaks = append(streaks, streak)
 				streak.UserID = userID
 				streak.StartTime = timestamp
 				streak.EndTime = timestamp
 			}
 		} else {
-			log.Printf("new streak for %s", userID)
+			log.Printf(language.GetTranslation("streak_new"), userID)
 			streak.UserID = userID
 			streak.StartTime = timestamp
 			streak.EndTime = timestamp
@@ -131,9 +132,9 @@ func GetActiveStreaks(db *sql.DB) ([]Streak, error) {
 	timeNow := time.Now()
 	var timeString string
 	if timeNow.Hour() < 13 || (timeNow.Hour() == 13 && timeNow.Minute() < 38) {
-	    timeString = time.Now().AddDate(0, 0, -1).Format("2006-01-02")
+		timeString = time.Now().AddDate(0, 0, -1).Format("2006-01-02")
 	} else {
-	    timeString = time.Now().Format("2006-01-02")
+		timeString = time.Now().Format("2006-01-02")
 	}
 
 	rows, err := db.Query(`
@@ -147,17 +148,32 @@ func GetActiveStreaks(db *sql.DB) ([]Streak, error) {
 	defer rows.Close()
 
 	var streaks []Streak
-
 	for rows.Next() {
 		var streak Streak
-
 		if err := rows.Scan(&streak.UserID, &streak.StartTime, &streak.EndTime); err != nil {
 			return nil, err
 		}
-
 		streaks = append(streaks, streak)
 	}
 
+	return streaks, nil
+}
+
+func GetHighStreaks(db *sql.DB) ([]Streak, error) {
+	rows, err := db.Query(`SELECT user_id, start_time, end_time FROM streaks`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var streaks []Streak
+	for rows.Next() {
+		var streak Streak
+		if err := rows.Scan(&streak.UserID, &streak.StartTime, &streak.EndTime); err != nil {
+			return nil, err
+		}
+		streaks = append(streaks, streak)
+	}
 	return streaks, nil
 }
 
@@ -173,14 +189,11 @@ func GetTodaysPoints(db *sql.DB) ([]Point, error) {
 	defer rows.Close()
 
 	var points []Point
-
 	for rows.Next() {
 		var point Point
-
 		if err := rows.Scan(&point.UserID, &point.Timestamp, &point.Points); err != nil {
 			return nil, err
 		}
-
 		points = append(points, point)
 	}
 
@@ -206,6 +219,7 @@ func CreateStreak(db *sql.DB, streak Streak) error {
 		insert into streaks (user_id, start_time, end_time)
 		values (?, ?, ?)
 	`
+
 	_, err := db.Exec(sqlStatement, streak.UserID, streak.StartTime, streak.EndTime)
 	if err != nil {
 		return err
@@ -219,7 +233,6 @@ func UpdateAllStreaks(db *sql.DB) (new []Streak, broken []Streak, error error) {
 		select user_id, start_time, end_time from streaks
 		where end_time like ?
 	`, time.Now().AddDate(0, 0, -1).Format("2006-01-02")+"%")
-
 	if err != nil {
 		return nil, nil, err
 	}
@@ -227,14 +240,11 @@ func UpdateAllStreaks(db *sql.DB) (new []Streak, broken []Streak, error error) {
 	defer rows.Close()
 
 	var streaks []Streak
-
 	for rows.Next() {
 		var streak Streak
-
 		if err := rows.Scan(&streak.UserID, &streak.StartTime, &streak.EndTime); err != nil {
 			return nil, nil, err
 		}
-
 		streaks = append(streaks, streak)
 	}
 
