@@ -3,6 +3,7 @@ package leet
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -144,7 +145,7 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Content == "1337 streak" {
 		streaks, err := GetActiveStreaks(Config.db)
 		if err != nil {
-			log.Fatal(err)
+			log.Println("Something went wrong when getting active streaks: ", err)
 			return
 		}
 		// check if there are any active streaks
@@ -159,5 +160,51 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		s.ChannelMessageSend(m.ChannelID, streakMsg)
+	}
+
+	if m.Content == "1337 hstreak" {
+		streaks, err := GetHighStreaks(Config.db)
+		if err != nil {
+			log.Println("Something went wrong getting high streaks: ", err)
+			return
+		}
+
+		type lists struct {
+			UserID string
+			Days   string
+		}
+
+		// Create a map to keep track of whether we have seen a user before
+		seen := make(map[string]bool)
+
+		// Create a slice to hold the sorted list of high streaks
+		sorted := make([]lists, 0, len(streaks))
+
+		// Loop over the unsorted list and add each user to the sorted list
+		// if we haven't seen them before
+		for _, listStreak := range streaks {
+			if !seen[listStreak.UserID] {
+				seen[listStreak.UserID] = true
+
+				var list lists
+				list.Days = strconv.Itoa(listStreak.Duration())
+				list.UserID = listStreak.UserID
+
+				sorted = append(sorted, list)
+			}
+		}
+
+		// Sort the list of high streaks by the number of days
+		sort.Slice(sorted, func(i, j int) bool {
+			return sorted[i].Days > sorted[j].Days
+		})
+
+		msgHigh := "**Streak highscore:** \n"
+		for _, sortedList := range sorted {
+			msgHigh += sortedList.UserID + ": " + sortedList.Days + " Days\n"
+		}
+
+		s.ChannelMessageSend(m.ChannelID, msgHigh)
+
 	}
 }

@@ -37,6 +37,7 @@ func StartEngine(s *discordgo.Session) {
 				order by sum(points) desc
 				limit 10;
 			`
+
 			rows, err := db.Query(sqlStmt)
 			if err != nil {
 				log.Println(err)
@@ -72,6 +73,7 @@ func StartEngine(s *discordgo.Session) {
 				log.Println(err)
 				continue
 			}
+
 			for _, brokenStreak := range brokenStreaks {
 				for _, channels := range servers {
 					mainChannel, err := leet.GetMainChannel(channels)
