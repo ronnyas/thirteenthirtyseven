@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"golang.org/x/exp/rand"
 )
 
 func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -23,14 +24,47 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if current_time.Hour() != 13 || current_time.Minute() != 37 {
 			return
 		}
-		
 		points := calculatePointsFromTimestamp(m.Timestamp)
-		
 		save := SavePoints(m.Author.Username, points)
 		if save {
 			s.MessageReactionAdd(m.ChannelID, m.ID, "1337:1079824982613442580")
 		}
 
+	}
+
+	// 420 Easter Egg
+	if m.Content == "420" {
+		current_time := time.Now()
+
+		// 4:20am on any day gives half points
+		if current_time.Hour() == 4 && current_time.Minute() == 20 {
+			points := (calculatePointsFromTimestamp(m.Timestamp) / 2)
+
+			// If it's also on the 20th of april, give 420 extra points
+			if current_time.Month() == time.April && current_time.Day() == 20 {
+				points += 420
+			}
+
+			save := SavePoints(m.Author.Username, points)
+			if save {
+				s.MessageReactionAdd(m.ChannelID, m.ID, "1337:1079824982613442580")
+			}
+		}
+	}
+
+	if m.Content == "1234" {
+		current_time := time.Now()
+
+		// 1234 on any day gives 1-4 point for lolz
+		if current_time.Hour() == 12 && current_time.Minute() == 34 {
+			points := 0
+			points += rand.Intn(4) + 1
+
+			save := SavePoints(m.Author.Username, points)
+			if save {
+				s.MessageReactionAdd(m.ChannelID, m.ID, "1337:1079824982613442580")
+			}
+		}
 	}
 
 	if m.Content == "1337 lb" {
