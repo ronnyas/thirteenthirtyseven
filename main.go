@@ -12,12 +12,10 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/ronnyas/thirteenthirtyseven/chat"
 	"github.com/ronnyas/thirteenthirtyseven/config"
 	"github.com/ronnyas/thirteenthirtyseven/database"
 	"github.com/ronnyas/thirteenthirtyseven/game"
 )
-
 
 func main() {
 	log.Println("Loading config")
@@ -31,13 +29,13 @@ func main() {
 		field := key.Field(i)
 		log.Println("\t" + key.Type().Field(i).Name + ": " + fmt.Sprintf("%v", field.Interface()))
 	}
-	
+
 	db, err := database.Connect(cfg.DatabasePath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	
+
 	err = database.SetupDatabaseSchema(db)
 	if err != nil {
 		log.Fatal(err)
@@ -52,21 +50,18 @@ func main() {
 
 	discord.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if m.Content == ".time" {
-			s.ChannelMessageSend(m.ChannelID, time.Now().Format("2006-01-02 15:04:05"))
+			diff := time.Now().Sub(m.Timestamp)
+
+			message := "Local time: " + time.Now().Format("2006-01-02 15:04:05.000000") + " discord clock is off by: " + diff.String()
+			s.ChannelMessageSend(m.ChannelID, message)
 		}
 	})
 
-	
 	discord.AddHandler(game.Commands)
 	game.SetDatabase(db)
 	game.SetMainChannel(cfg.MainChannel)
 	game.SetStreakDays(cfg.StreakDays)
-
-	discord.AddHandler(chat.Commands)
-	chat.SetOpenAIKey(cfg.OpenAIKey)
-
-	// discord.AddHandler(chat.Commands)
-	// chat.SetOpenAIKey(cfg.OpenAIKey)
+	game.SetReactEmoji(cfg.ReactEmoji)
 
 	// temp code
 	// check if there are any data in the streaks table. if not , run BackfillStreaks
@@ -80,18 +75,18 @@ func main() {
 	}
 
 	discord.Identify.Intents = discordgo.IntentsGuildMessages
-	
+
 	err = discord.Open()
 	if err != nil {
 		log.Fatal("Can't connect to discord: ", err)
 		return
 	}
-	
+
 	go game.StartEngine(discord)
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
-	
+
 	discord.Close()
 }

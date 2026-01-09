@@ -18,6 +18,7 @@ var Config struct {
 	mainChannel string
 	db          *sql.DB
 	StreakDays  int
+	ReactEmoji  string
 }
 
 func SetDatabase(db *sql.DB) {
@@ -28,6 +29,9 @@ func SetMainChannel(channelID string) {
 }
 func SetStreakDays(days int) {
 	Config.StreakDays = days
+}
+func SetReactEmoji(emoji string) {
+	Config.ReactEmoji = emoji
 }
 
 func calculatePointsFromTimestamp(timestamp time.Time) int {

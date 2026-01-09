@@ -3,6 +3,8 @@ package game
 import (
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -17,7 +19,26 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	if m.Content == "1337" {
+	// Check if message is a valid 1337 variant (case-insensitive)
+	validVariants := []string{
+		"1337",
+		"trettentrettisju",
+		"13:37",
+		"thirteenthirtyseven",
+		"leet",
+		"elite",
+	}
+	
+	isValidVariant := false
+	contentLower := strings.ToLower(strings.TrimSpace(m.Content))
+	for _, variant := range validVariants {
+		if strings.ToLower(variant) == contentLower {
+			isValidVariant = true
+			break
+		}
+	}
+	
+	if isValidVariant {
 		current_time := time.Now()
 
 		if current_time.Hour() != 13 || current_time.Minute() != 37 {
@@ -28,51 +49,108 @@ func Commands(s *discordgo.Session, m *discordgo.MessageCreate) {
 		
 		save := SavePoints(m.Author.Username, points)
 		if save {
-			s.MessageReactionAdd(m.ChannelID, m.ID, "1337:1079824982613442580")
+			s.MessageReactionAdd(m.ChannelID, m.ID, Config.ReactEmoji)
 		}
 
 	}
 
-	if m.Content == "1337 lb" {
+	if strings.HasPrefix(m.Content, "1337 lb") {
+		log.Printf("Leaderboard command received: %q", m.Content)
 		db := Config.db
-
-		leaderboardConfigs := []leaderboardConfig{
-			{
-				name:    "all time",
-				sqlStmt: "select user_id, sum(points) from points group by user_id order by sum(points) desc limit 10;",
-				prefix:  "\n\n**Leaderboard all time:**\n",
-			},
-			{
-				name:    "this week",
-				sqlStmt: "select user_id, sum(points) from points where date(timestamp) >= date('now', 'weekday 0', '-6 days') group by user_id order by sum(points) desc limit 10;",
-				prefix:  "\n\n**Leaderboard this week:**\n",
-			},
+		
+		// Parse the command to extract year if provided
+		parts := strings.Fields(m.Content)
+		var year int
+		var yearStr string
+		var showTotal bool
+		
+		if len(parts) == 3 {
+			// Check if it's "total" or a year
+			yearStr = parts[2]
+			if strings.ToLower(yearStr) == "total" {
+				showTotal = true
+			} else {
+				// Year provided: "1337 lb <year>"
+				parsedYear, err := strconv.Atoi(yearStr)
+				if err != nil {
+					s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Invalid year: %s. Please provide a valid year (e.g., 2024) or 'total'.", yearStr))
+					return
+				}
+				year = parsedYear
+			}
+		} else if len(parts) == 2 {
+			// No year provided: "1337 lb" - use current year
+			year = time.Now().Year()
+		} else {
+			// Invalid command format
+			s.ChannelMessageSend(m.ChannelID, "Usage: `1337 lb`, `1337 lb <year>`, or `1337 lb total`")
+			return
 		}
-	
-		for _, config := range leaderboardConfigs {
-			rows, err := db.Query(config.sqlStmt)
-			if err != nil {
-				panic(err)
+		
+		var sqlStmt string
+		var prefix string
+		
+		if showTotal {
+			// All-time leaderboard
+			sqlStmt = "select user_id, sum(points) from points group by user_id order by sum(points) desc limit 10;"
+			prefix = "**Leaderboard all time:**\n"
+		} else {
+			// Validate year range (reasonable bounds)
+			if year < 2000 || year > 2100 {
+				s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Invalid year: %d. Year must be between 2000 and 2100.", year))
+				return
 			}
-			defer rows.Close()
-	
-			leaderboardMessage, err := generateLeaderboardMessage(config.prefix, rows)
-			if err != nil {
-				panic(err)
-			}
-	
-			err = rows.Err()
-			if err != nil {
-				panic(err)
-			}
-
-			if len(leaderboardMessage) == len(config.prefix) {
-				leaderboardMessage += "No points yet!"
-			}
-
-	
-			s.ChannelMessageSend(m.ChannelID, leaderboardMessage)
+			
+			// Build SQL query to filter by year
+			sqlStmt = fmt.Sprintf(
+				"select user_id, sum(points) from points where strftime('%%Y', timestamp) = '%d' group by user_id order by sum(points) desc limit 10;",
+				year,
+			)
+			prefix = fmt.Sprintf("**Leaderboard %d:**\n", year)
 		}
+		
+		rows, err := db.Query(sqlStmt)
+		if err != nil {
+			if showTotal {
+				log.Printf("Error querying database for total leaderboard: %v", err)
+				s.ChannelMessageSend(m.ChannelID, "Error querying all-time leaderboard.")
+			} else {
+				log.Printf("Error querying database for year %d: %v", year, err)
+				s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Error querying leaderboard for year %d.", year))
+			}
+			return
+		}
+		defer rows.Close()
+
+		leaderboardMessage, err := generateLeaderboardMessage(prefix, rows)
+		if err != nil {
+			if showTotal {
+				log.Printf("Error generating leaderboard message: %v", err)
+				s.ChannelMessageSend(m.ChannelID, "Error generating all-time leaderboard.")
+			} else {
+				log.Printf("Error generating leaderboard message: %v", err)
+				s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Error generating leaderboard for year %d.", year))
+			}
+			return
+		}
+
+		err = rows.Err()
+		if err != nil {
+			if showTotal {
+				log.Printf("Error iterating rows: %v", err)
+				s.ChannelMessageSend(m.ChannelID, "Error processing all-time leaderboard.")
+			} else {
+				log.Printf("Error iterating rows: %v", err)
+				s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Error processing leaderboard for year %d.", year))
+			}
+			return
+		}
+
+		if len(leaderboardMessage) == len(prefix) {
+			leaderboardMessage += "No points yet!"
+		}
+
+		s.ChannelMessageSend(m.ChannelID, leaderboardMessage)
 	}
 
 	if m.Content == "1337 streak" {

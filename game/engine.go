@@ -22,6 +22,24 @@ func StartEngine(s *discordgo.Session) {
 			last_report = current_time.Format("2006-01-02")
 			log.Println(last_report)
 	
+			// First check if there are any points for today
+			checkStmt := `
+				select count(*) from points
+				where timestamp >= date('now', 'start of day');
+			`
+			var count int
+			err := db.QueryRow(checkStmt).Scan(&count)
+			if err != nil {
+				log.Printf("Error checking for today's points: %v", err)
+				time.Sleep(60 * time.Second)
+				continue
+			}
+
+			// Only send leaderboard if there were points today
+			if count == 0 {
+				continue
+			}
+
 			sqlStmt := `
 				select user_id, sum(points) from points
 				where timestamp >= date('now', 'start of day')
